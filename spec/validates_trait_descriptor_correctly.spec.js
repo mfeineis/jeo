@@ -27,11 +27,10 @@ describe('The JEO trait and dependency injection library export', () => {
             expect(trait.isTrait(t)).toBe(true);
         });
 
-        it('should return an object that has no enumerable properties besides the "resolve" function', () => {
+        it('should return an object that has a function called "resolve" and an expando property', () => {
             const t = trait(emptyDescriptor);
-            const keys = Object.keys(t);
-            expect(keys.length).toBe(1);
-            expect(keys[0]).toBe('resolve');
+            expect(typeof t.resolve).toBe('function');
+            expect(Object.keys(t).filter(p => p !== 'resolve').length).toBe(1);
         });
 
     });
@@ -264,7 +263,9 @@ describe('The JEO trait and dependency injection library export', () => {
 
         it('should provide an object as the first argument that contains utilities for defining traits', () => {
             expect(typeof lib).toBe('object');
+            expect(typeof lib.assert).toBe('function');
             expect(typeof lib.log).toBe('function');
+            expect(typeof lib.mix).toBe('function');
             expect(typeof lib.requires).toBe('function');
         });
 

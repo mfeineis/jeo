@@ -246,6 +246,132 @@ describe('A JEO trait', () => {
 
         });
 
+        describe('when a trait is being created via "create(t, config)" with a configuration it', () => {
+
+            const t1 = trait({
+                public: {
+                    first() { 
+                        return 1;
+                    }
+                }
+            });
+
+            const t1Impl = trait({
+                public: {
+                    first() { 
+                        return 2;
+                    }
+                }
+            });
+
+            const t2 = trait({
+                public: {
+                    first: trait.required
+                }
+            });
+
+            const t3 = trait({
+                public: {
+                    first() {
+                        return 3;
+                    },
+                    blubb() { }
+                }
+            });
+
+            const tx = trait({
+                traits: t1,
+                requires: t1,
+                constructor(t1) {
+                    this.dep1 = t1;
+                },
+                public: {
+                    second() { 
+                        return this.dep1.first();
+                    }
+                }
+            });
+
+            it('should make sure that both the configured dependency and the substitute are traits', () => {
+                expect(() => trait.create(t1, {
+                    inject: [
+                        { trait: t1, inject: { boo: 'ooom' } }
+                    ]
+                })).toThrow();
+
+                expect(() => trait.create(t1, {
+                    inject: [
+                        { trait: { boo: 'ooom' }, inject: t1 }
+                    ]
+                })).toThrow();
+
+                expect(() => trait.create(t1, {
+                    inject: [
+                        { trait: { boo: 'ooom' }, inject: { boo: 'ooom' } }
+                    ]
+                })).toThrow();
+            });
+
+            it('should be possible to be substituted itself by a configured dependency', () => {
+                const t = trait.create(t1, {
+                    inject: [
+                        { trait: t1, inject: t1Impl }
+                    ]
+                });
+                
+                expect(t.first()).toBe(2);
+            });
+
+            it('should verify that a configured dependency can be substituted for the original dependency', () => {
+                expect(() => trait.create(tx, {
+                    inject: [
+                        { trait: t1, inject: t3 }
+                    ]
+                })).toThrow();
+                
+                const t = trait.create(tx, {
+                    inject: [
+                        { trait: t1, inject: t3.resolve({ blubb: null }) }
+                    ]
+                });
+
+                expect(t.first()).toBe(3);
+            });
+
+            it('should substitute the original dependencies for the configured ones', () => {
+
+                const t = trait.create(tx, {
+                    inject: [
+                        { trait: t1, inject: t1Impl }
+                    ]
+                });
+
+                expect(t.first()).toBe(2);
+                expect(t.second()).toBe(2);
+            });
+
+            describe('when composing traits ad hoc via "trait(t1, t2, ..., tn)" it', () => {
+
+                it('should support plain objects to provide public apis in case at least two arguments are supplied', () => {
+                    const t = trait.create(trait({ first() { return 4; } }, t2));
+                    expect(t.first()).toBe(4);
+                    
+                    expect(() => trait.create(trait(t1, null))).toThrow();
+                    expect(() => trait.create(trait(t1, undefined))).toThrow();
+                    expect(() => trait.create(trait(t1, ''))).toThrow();
+                    expect(() => trait.create(trait(t1, 0))).toThrow();
+                });
+
+                it('should return a new trait composed of the specified traits', () => {
+                    const t = trait.create(trait(t1.resolve({ first: null }), t2, t3));
+
+                    expect(t.first()).toBe(3);
+                });
+
+            });
+
+        });
+
     });
 
 });

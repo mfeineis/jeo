@@ -17,19 +17,20 @@
         global[name] = factory();
     }
 
-}((0, eval)('this'), 'JEO', () => {
+}((0, eval)('this'), 'jeo', () => {
     'use strict';
 
     const Object_create = Object.create;
-    const Object_defineProperty = Object.defineProperty;
     const Object_freeze = Object.freeze;
     const Object_keys = Object.keys;
     const hasOwnProperty = {}.hasOwnProperty;
 
     function mix(to, from = {}) {
+        
         Object_keys(from).forEach(key => {
             to[key] = from[key];
         });
+
         return to;
     }
 
@@ -294,27 +295,39 @@
     }
 
     function makeTrait(descriptor) {
-        const t = {};
 
-        Object_defineProperty(t, 'resolve', {
-            enumerable: true,
-            value: function resolve(resolver) {
+        const t = {
+            resolve(resolver) {
                 return makeTrait(resolveDescriptor(descriptor, resolver));
             }
-        });
-
-        Object_defineProperty(t, expando, {
-            //configurable: false,
-            //enumerable: false,
-            value: storeMetaData(descriptor),
-            //writable: false
-        });
+        };
+        t[expando] = storeMetaData(descriptor);
 
         return Object_freeze(t);
     }
 
+    function makeHash(t) {
+        const publicMembers = retrieveMetaData(t).public;
+        let hash = Object_keys(publicMembers);
+        hash.sort();
+        return hash.join('#');
+    }
+
     function closeOverInstance(instance, config) {
         return function applyStatefulTrait(t) {
+            let substitute = config.inject.filter(tt => tt.trait === t)[0];
+            if (substitute) {
+                let substituteHash = makeHash(substitute.inject);
+                let hashOfT = makeHash(t);
+
+                if (hashOfT !== substituteHash) {
+                    throw new Error('Substiute hash "' + substituteHash + 
+                        '" does not match the hash "' + hashOfT + '" of ' +
+                        'the trait to be substituted');
+                }
+                t = substitute.inject;
+            }
+
             const descriptor = retrieveMetaData(t);
             const publicMembers = descriptor.public;
             const privateMembers = descriptor.private;
@@ -399,7 +412,7 @@
         };
     }
 
-    function createInstance(t, config = {}) {
+    function createInstance(t, config) {
         if (!isTrait(t)) {
             throw new Error('The argument "' + JSON.stringify(t) + '" is ' +
                 'not a trait and therefore can not be instantiated.');
@@ -427,6 +440,22 @@
 
     // The main entry point for our library
     function trait(descriptor) {
+        if (arguments.length > 1) {
+            const args = [].slice.call(arguments).map(arg => {
+                if (!arg) {
+                    throw new Error('A top level argument can not be falsy');
+                }
+
+                if (!isTrait(arg)) {
+                    return trait({ public: arg });
+                }
+                else {
+                    return arg;
+                }
+            });
+            return trait({ traits: args });
+        }
+
         if (typeof descriptor === 'function') {
             descriptor = descriptor(createInstance(trait.Util, trait.config));
         }
@@ -447,15 +476,32 @@
         });
     }
 
+    function createToplevelInstance(t, config = {}) {
+        const currentConfig = mix(trait.config, config);
+
+        currentConfig.inject.forEach(item => {
+            if (!isTrait(item.trait)) {
+                throw new Error('Invalid configured dependency');
+            }
+            if (!isTrait(item.inject)) {
+                throw new Error('Invalid substituted dependency configured');
+            }
+        });
+
+        return createInstance(t, currentConfig);
+    }
+
     return Object_freeze(mix(trait, {
         Util: trait({
             public: {
-                requires: requires,
-                log() { console.log(...arguments); }
+                assert: assert,
+                log() { console.log(...arguments); },
+                mix: mix,
+                requires: requires
             }
         }),
-        config: {},
-        create: createInstance,
+        config: { inject: [] },
+        create: createToplevelInstance,
         isTrait: isTrait,
         required: Object_freeze(new Required())
     }));
