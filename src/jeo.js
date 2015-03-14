@@ -192,6 +192,7 @@
 
     function extractPrivateMethods(descriptor) {
         const hasPrivateMethods = hasOwnProperty.call(descriptor, 'private');
+
         const privateMethods = hasPrivateMethods
             ? descriptor.private
             : {};
@@ -316,7 +317,7 @@
 
     function closeOverInstance(instance, config) {
         return function applyStatefulTrait(t) {
-            let substitute = config.for.filter(tt => tt.trait === t)[0];
+            let [substitute] = config.for.filter(tt => tt.trait === t);
             if (substitute) {
                 let substituteHash = makeHash(substitute.use);
                 let hashOfT = makeHash(t);

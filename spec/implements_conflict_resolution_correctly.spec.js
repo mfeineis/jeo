@@ -6,10 +6,13 @@ const { trait } = require('../src/jeo');
 describe('A JEO trait', () => {
     const validTrait = trait({ 
         public: { 
-            hideMe: function () {}, 
-            renameMe: function () {},
-            requiredMember: trait.required
-        } 
+            hideMe() { return true; }, 
+            renameMe() { return true; },
+            requiredMember: trait.required,
+            touchPublicMemberPrivately() {
+                return this.hideMe() && this.renameMe();
+            }
+        }
     });
     const invalidTrait = trait({ public: { hihi: function () {} } });
 
@@ -41,6 +44,10 @@ describe('A JEO trait', () => {
             expect(() => validTrait.resolve({ requiredMember: null })).toThrow();
         });
 
+        xit('should make sure that only the public reference is hidden but a private instance is still available', () => {
+            expect(trait({ requiredMember: 'required' }, validTrait.resolve({ hideMe: null })).create().touchPublicMemberPrivately()).toBe(true);
+        });
+
     });
 
     describe('when renaming a public method by calling "resolve({ renameMe: \'renamed\' })" on it', () => {
@@ -66,6 +73,10 @@ describe('A JEO trait', () => {
 
         it('should prevent renaming required members', () => {
             expect(() => validTrait.resolve({ requiredMember: 'renamedRequiredMember' })).toThrow();
+        });
+
+        xit('should make sure that only the public reference is renamed but a private instance is still available', () => {
+            expect(trait({ requiredMember: 'required' }, validTrait.resolve({ renameMe: 'renamed' })).create().touchPublicMemberPrivately()).toBe(true);
         });
 
     });
