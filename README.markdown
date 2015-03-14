@@ -288,7 +288,6 @@ on [github](https://github.com/mfeineis/jeo/issues). I'd love to here from you!
 * v0.1.0 Basic trait handling and instance construction
 
 ## TODO
-* Support renamed public methods that are still accessable under their original names privately
 * Implement decorators
 * Eat my own dogfood to improve the API
 * Write *good* examples
