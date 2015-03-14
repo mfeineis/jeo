@@ -1,7 +1,7 @@
 /*jshint esnext: true */
 /*global require,describe,it,expect */
 
-const trait = require('../src/jeo');
+const { trait } = require('../src/jeo');
 
 describe('A JEO trait', () => {
     const validTrait = trait({ 

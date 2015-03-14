@@ -1,7 +1,7 @@
 /*jshint esnext: true */
 /*global require,describe,it,expect */
 
-const trait = require('../src/jeo');
+const { trait } = require('../src/jeo');
 
 describe('The JEO trait and dependency injection library', () => {
 
@@ -23,10 +23,6 @@ describe('The JEO trait and dependency injection library', () => {
 
         it('should have a "config" property that contains the default configuration', () => {
             expect(typeof trait.config === 'object').toBe(true);
-        });
-
-        it('should have a "create" function', () => {
-            expect(typeof trait.create === 'function').toBe(true);
         });
 
         it('should have a "required" object that can be used to declare required functionality for a trait', () => {

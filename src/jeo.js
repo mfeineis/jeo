@@ -125,11 +125,11 @@
     }
 
     function extractTraits(descriptor) {
-        const hasTraits = hasOwnProperty.call(descriptor, 'traits');
+        const hasTraits = hasOwnProperty.call(descriptor, 'is');
         const traits = hasTraits
-            ? (Array.isArray(descriptor.traits)
-                ? descriptor.traits
-                : [descriptor.traits])
+            ? (Array.isArray(descriptor.is)
+                ? descriptor.is
+                : [descriptor.is])
             : [];
 
         traits.forEach(t => {
@@ -301,6 +301,7 @@
                 return makeTrait(resolveDescriptor(descriptor, resolver));
             }
         };
+        t.create = createToplevelInstanceFactory(t);
         t[expando] = storeMetaData(descriptor);
 
         return Object_freeze(t);
@@ -315,9 +316,9 @@
 
     function closeOverInstance(instance, config) {
         return function applyStatefulTrait(t) {
-            let substitute = config.inject.filter(tt => tt.trait === t)[0];
+            let substitute = config.for.filter(tt => tt.trait === t)[0];
             if (substitute) {
-                let substituteHash = makeHash(substitute.inject);
+                let substituteHash = makeHash(substitute.use);
                 let hashOfT = makeHash(t);
 
                 if (hashOfT !== substituteHash) {
@@ -325,7 +326,7 @@
                         '" does not match the hash "' + hashOfT + '" of ' +
                         'the trait to be substituted');
                 }
-                t = substitute.inject;
+                t = substitute.use;
             }
 
             const descriptor = retrieveMetaData(t);
@@ -420,7 +421,7 @@
 
         const descriptor = retrieveMetaData(t);
         let instance = {};
-        let traits = [t].concat(descriptor.traits);
+        let traits = [t].concat(descriptor.is);
 
         const applyStatefulTrait = closeOverInstance(instance, config);
         traits.forEach(applyStatefulTrait);
@@ -453,7 +454,7 @@
                     return arg;
                 }
             });
-            return trait({ traits: args });
+            return trait({ is: args });
         }
 
         if (typeof descriptor === 'function') {
@@ -467,7 +468,7 @@
         let { privateMethods } = extractPrivateMethods(descriptor);
 
         return makeTrait({
-            traits: traits,
+            is: traits,
             requires: requires,
             constructor: constructor,
             main: main,
@@ -476,35 +477,39 @@
         });
     }
 
-    function createToplevelInstance(t, config = {}) {
-        const currentConfig = mix(trait.config, config);
+    function createToplevelInstanceFactory(t) {
+        return function createToplevelInstance(config = {}) {
+            const currentConfig = mix(trait.config, config);
 
-        currentConfig.inject.forEach(item => {
-            if (!isTrait(item.trait)) {
-                throw new Error('Invalid configured dependency');
-            }
-            if (!isTrait(item.inject)) {
-                throw new Error('Invalid substituted dependency configured');
-            }
-        });
+            currentConfig.for.forEach(item => {
+                if (!isTrait(item.trait)) {
+                    throw new Error('Invalid configured dependency');
+                }
+                if (!isTrait(item.use)) {
+                    throw new Error('Invalid substituted dependency ' +
+                        'configured');
+                }
+            });
 
-        return createInstance(t, currentConfig);
+            return createInstance(t, currentConfig);
+        };
     }
 
-    return Object_freeze(mix(trait, {
-        Util: trait({
-            public: {
-                assert: assert,
-                log() { console.log(...arguments); },
-                mix: mix,
-                requires: requires
-            }
-        }),
-        config: { inject: [] },
-        create: createToplevelInstance,
-        isTrait: isTrait,
-        required: Object_freeze(new Required())
-    }));
+    return {
+        trait: Object_freeze(mix(trait, {
+            Util: trait({
+                public: {
+                    assert: assert,
+                    log() { console.log(...arguments); },
+                    mix: mix,
+                    requires: requires
+                }
+            }),
+            config: { for: [] },
+            isTrait: isTrait,
+            required: Object_freeze(new Required())
+        }))
+    };
 }));
 
 

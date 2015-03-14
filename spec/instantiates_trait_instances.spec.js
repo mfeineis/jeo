@@ -1,7 +1,7 @@
 /*jshint esnext: true */
 /*global require,describe,it,expect */
 
-const trait = require('../src/jeo');
+const { trait } = require('../src/jeo');
 
 describe('A JEO trait', () => {
 
@@ -18,21 +18,17 @@ describe('A JEO trait', () => {
             }
         });
 
-        it('should verify that a trait has been passed in', () => {
-            expect(() => trait.create(1)).toThrow();
-            expect(() => trait.create(true)).toThrow();
-            expect(() => trait.create('sbldkl')).toThrow();
-
-            expect(() => trait.create(t)).not.toThrow();
+        it('should have a "create" function', () => {
+            expect(typeof t.create === 'function').toBe(true);
         });
 
         it('should instantiate the specified trait containing the public methods', () => {
-            const instance = trait.create(t);
+            const instance = t.create();
             expect(typeof instance.methodA).toBe('function');
         });
 
         it('should not instantiate an incomplete trait that still has required members', () => {
-            expect(() => trait.create(incomplete)).toThrow();
+            expect(() => incomplete.create()).toThrow();
         });
 
         it('should run the constructor on the plain instance before any methods are available', () => {
@@ -47,7 +43,7 @@ describe('A JEO trait', () => {
                 },
                 public: { methodC() { } }
             });
-            trait.create(t2);
+            t2.create();
             expect(context).not.toBeNull();
             expect(membersAvailableInConstructor.length).toBe(0);
         });
@@ -61,7 +57,7 @@ describe('A JEO trait', () => {
                 },
                 public: { methodC() { } }
             });
-            const instance = trait.create(t2);
+            const instance = t2.create();
             expect(typeof instance.privateMember).toBe('undefined');
         });
 
@@ -79,7 +75,7 @@ describe('A JEO trait', () => {
                     }
                 }
             });
-            const instance = trait.create(t2);
+            const instance = t2.create();
             expect(instance.methodC()).toBe(privateValue);
         });
 
@@ -89,7 +85,7 @@ describe('A JEO trait', () => {
                     privateMethod() {}
                 }
             });
-            expect(trait.create(t2).privateMethod).not.toBeDefined();
+            expect(t2.create().privateMethod).not.toBeDefined();
         });
 
         it('should prevent private methods to be required', () => {
@@ -109,7 +105,7 @@ describe('A JEO trait', () => {
                     privateMember() {}
                 }
             });
-            expect(() => trait.create(t2)).toThrow();
+            expect(() => t2.create()).toThrow();
         });
 
         it('should prevent public methods to overwrite other members with the same name', () => {
@@ -121,7 +117,7 @@ describe('A JEO trait', () => {
                     privateMember() {}
                 }
             });
-            expect(() => trait.create(t2)).toThrow();
+            expect(() => t2.create()).toThrow();
         });
 
         it('should allow public methods to access other public and private methods', () => {
@@ -149,7 +145,7 @@ describe('A JEO trait', () => {
                     }
                 }
             });
-            const instance = trait.create(t2);
+            const instance = t2.create();
             expect(instance.methodD()).toBe(privateValue);
             expect(instance.methodE()).toBe(anotherValue);
         });
@@ -182,26 +178,26 @@ describe('A JEO trait', () => {
 
             it('should allow overriding members with the same name as long as exactly one of them is not a required statement', () => {
                 const tx = trait({
-                    traits: [t1, t2, t4]
+                    is: [t1, t2, t4]
                 });
 
-                expect(() => trait.create(tx)).not.toThrow();
+                expect(() => tx.create()).not.toThrow();
             });
 
             it('should prevent overriding members with the same name when at least two of them are not required statements', () => {
                 const ty = trait({
-                    traits: [t1, t2, t3]
+                    is: [t1, t2, t3]
                 });
 
-                expect(() => trait.create(ty)).toThrow();
+                expect(() => ty.create()).toThrow();
             });
 
             it('should prevent overriding members with the same name when all of them are required statements', () => {
                 const tz = trait({
-                    traits: [t1, t4]
+                    is: [t1, t4]
                 });
 
-                expect(() => trait.create(tz)).toThrow();
+                expect(() => tz.create()).toThrow();
             });
 
         });
@@ -221,7 +217,7 @@ describe('A JEO trait', () => {
                     }
                 });
                 const dep2 = trait({
-                    traits: dep1,
+                    is: dep1,
                     constructor() {
                         dep2Created = true;
                     },
@@ -239,14 +235,14 @@ describe('A JEO trait', () => {
                     }
                 });
 
-                trait.create(t);
+                t.create();
                 expect(dep1Created).toBe(2);
                 expect(dep2Created).toBe(true);
             });
 
         });
 
-        describe('when a trait is being created via "create(t, config)" with a configuration it', () => {
+        describe('when a trait is being created via "create(config?)" with a configuration it', () => {
 
             const t1 = trait({
                 public: {
@@ -280,7 +276,7 @@ describe('A JEO trait', () => {
             });
 
             const tx = trait({
-                traits: t1,
+                is: t1,
                 requires: t1,
                 constructor(t1) {
                     this.dep1 = t1;
@@ -293,29 +289,29 @@ describe('A JEO trait', () => {
             });
 
             it('should make sure that both the configured dependency and the substitute are traits', () => {
-                expect(() => trait.create(t1, {
-                    inject: [
-                        { trait: t1, inject: { boo: 'ooom' } }
+                expect(() => t1.create({
+                    for: [
+                        { trait: t1, use: { boo: 'ooom' } }
                     ]
                 })).toThrow();
 
-                expect(() => trait.create(t1, {
-                    inject: [
-                        { trait: { boo: 'ooom' }, inject: t1 }
+                expect(() => t1.create({
+                    for: [
+                        { trait: { boo: 'ooom' }, use: t1 }
                     ]
                 })).toThrow();
 
-                expect(() => trait.create(t1, {
-                    inject: [
-                        { trait: { boo: 'ooom' }, inject: { boo: 'ooom' } }
+                expect(() => t1.create({
+                    for: [
+                        { trait: { boo: 'ooom' }, use: { boo: 'ooom' } }
                     ]
                 })).toThrow();
             });
 
             it('should be possible to be substituted itself by a configured dependency', () => {
-                const t = trait.create(t1, {
-                    inject: [
-                        { trait: t1, inject: t1Impl }
+                const t = t1.create({
+                    for: [
+                        { trait: t1, use: t1Impl }
                     ]
                 });
                 
@@ -323,15 +319,15 @@ describe('A JEO trait', () => {
             });
 
             it('should verify that a configured dependency can be substituted for the original dependency', () => {
-                expect(() => trait.create(tx, {
-                    inject: [
-                        { trait: t1, inject: t3 }
+                expect(() => tx.create({
+                    for: [
+                        { trait: t1, use: t3 }
                     ]
                 })).toThrow();
                 
-                const t = trait.create(tx, {
-                    inject: [
-                        { trait: t1, inject: t3.resolve({ blubb: null }) }
+                const t = tx.create({
+                    for: [
+                        { trait: t1, use: t3.resolve({ blubb: null }) }
                     ]
                 });
 
@@ -340,9 +336,9 @@ describe('A JEO trait', () => {
 
             it('should substitute the original dependencies for the configured ones', () => {
 
-                const t = trait.create(tx, {
-                    inject: [
-                        { trait: t1, inject: t1Impl }
+                const t = tx.create({
+                    for: [
+                        { trait: t1, use: t1Impl }
                     ]
                 });
 
@@ -353,17 +349,17 @@ describe('A JEO trait', () => {
             describe('when composing traits ad hoc via "trait(t1, t2, ..., tn)" it', () => {
 
                 it('should support plain objects to provide public apis in case at least two arguments are supplied', () => {
-                    const t = trait.create(trait({ first() { return 4; } }, t2));
+                    const t = trait({ first() { return 4; } }, t2).create();
                     expect(t.first()).toBe(4);
                     
-                    expect(() => trait.create(trait(t1, null))).toThrow();
-                    expect(() => trait.create(trait(t1, undefined))).toThrow();
-                    expect(() => trait.create(trait(t1, ''))).toThrow();
-                    expect(() => trait.create(trait(t1, 0))).toThrow();
+                    expect(() => trait(t1, null).create()).toThrow();
+                    expect(() => trait(t1, undefined).create()).toThrow();
+                    expect(() => trait(t1, '').create()).toThrow();
+                    expect(() => trait(t1, 0).create()).toThrow();
                 });
 
                 it('should return a new trait composed of the specified traits', () => {
-                    const t = trait.create(trait(t1.resolve({ first: null }), t2, t3));
+                    const t = trait(t1.resolve({ first: null }), t2, t3).create();
 
                     expect(t.first()).toBe(3);
                 });

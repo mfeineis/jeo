@@ -1,7 +1,7 @@
 /*jshint esnext: true */
 /*global require,describe,it,expect */
 
-const trait = require('../src/jeo');
+const { trait } = require('../src/jeo');
 
 describe('The JEO trait and dependency injection library export', () => {
 
@@ -27,10 +27,11 @@ describe('The JEO trait and dependency injection library export', () => {
             expect(trait.isTrait(t)).toBe(true);
         });
 
-        it('should return an object that has a function called "resolve" and an expando property', () => {
+        it('should return an object that has two functions called "create" and "resolve" as well as an expando property', () => {
             const t = trait(emptyDescriptor);
+            expect(typeof t.create).toBe('function');
             expect(typeof t.resolve).toBe('function');
-            expect(Object.keys(t).filter(p => p !== 'resolve').length).toBe(1);
+            expect(Object.keys(t).length).toBe(3);
         });
 
     });
@@ -133,16 +134,16 @@ describe('The JEO trait and dependency injection library export', () => {
 
         it('should verify that the provided objects are in fact traits', () => {
 
-            expect(() => trait({ traits: 'blubb' })).toThrow();
-            expect(() => trait({ traits: true })).toThrow();
-            expect(() => trait({ traits: {} })).toThrow();
+            expect(() => trait({ is: 'blubb' })).toThrow();
+            expect(() => trait({ is: true })).toThrow();
+            expect(() => trait({ is: {} })).toThrow();
 
-            expect(() => trait({ traits: validDependency })).not.toThrow();
-            expect(() => trait({ traits: [validDependency, validDependency] })).not.toThrow();
+            expect(() => trait({ is: validDependency })).not.toThrow();
+            expect(() => trait({ is: [validDependency, validDependency] })).not.toThrow();
         });
         
         it('should allow an empty array', () => {
-            expect(() => trait({ traits: [] })).not.toThrow();
+            expect(() => trait({ is: [] })).not.toThrow();
         });
     });
 
