@@ -15,6 +15,12 @@ describe('A JEO trait', () => {
         }
     });
     const invalidTrait = trait({ public: { hihi: function () {} } });
+    const anotherTrait = trait({
+        public: {
+            requiredMember() { return 42; },
+            anotherMember() { return 314159265; }
+        }
+    });
 
     it('should have an unary "resolve" function', () => {
         expect(typeof validTrait.resolve).toBe('function');
@@ -44,8 +50,8 @@ describe('A JEO trait', () => {
             expect(() => validTrait.resolve({ requiredMember: null })).toThrow();
         });
 
-        xit('should make sure that only the public reference is hidden but a private instance is still available', () => {
-            expect(trait({ requiredMember: 'required' }, validTrait.resolve({ hideMe: null })).create().touchPublicMemberPrivately()).toBe(true);
+        it('should make sure that only the public reference is hidden but a private instance is still available', () => {
+            expect(trait({ requiredMember() { } }, validTrait.resolve({ hideMe: null })).create().touchPublicMemberPrivately()).toBe(true);
         });
 
     });
@@ -75,8 +81,16 @@ describe('A JEO trait', () => {
             expect(() => validTrait.resolve({ requiredMember: 'renamedRequiredMember' })).toThrow();
         });
 
-        xit('should make sure that only the public reference is renamed but a private instance is still available', () => {
-            expect(trait({ requiredMember: 'required' }, validTrait.resolve({ renameMe: 'renamed' })).create().touchPublicMemberPrivately()).toBe(true);
+        it('should make sure that only the public reference is renamed but a private instance is still available', () => {
+            expect(trait({ requiredMember() { } }, validTrait.resolve({ renameMe: 'renamed' })).create().touchPublicMemberPrivately()).toBe(true);
+        });
+
+    });
+
+    describe('when composed with another trait that provides a required member', () => {
+
+        it('should allow the trait to be created correctly', () => {
+            expect(trait(validTrait, anotherTrait).create().requiredMember()).toBe(42);
         });
 
     });

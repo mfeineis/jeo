@@ -165,51 +165,57 @@
         return object instanceof Required;
     }
 
-    function extractPublicMethods(descriptor) {
-        const hasPublicMethods = hasOwnProperty.call(descriptor, 'public');
-        const publicMethods = hasPublicMethods
+    function extractPublicMembers(descriptor) {
+        const hasPublicMembers = hasOwnProperty.call(descriptor, 'public');
+        const publicMembers = hasPublicMembers
             ? descriptor.public
             : {};
 
-        if (typeof publicMethods !== 'object') {
+        if (typeof publicMembers !== 'object') {
             throw new Error('"public" has to be an object.');
         }
 
-        Object_keys(publicMethods).forEach(name => {
-            const item = publicMethods[name];
+        Object_keys(publicMembers).forEach(name => {
+            const item = publicMembers[name];
 
             if (!isRequired(item) && typeof item !== 'function') {
                 throw new Error('"public" can only contain functions or ' +
                     ' "required" declarations (' +
-                    JSON.stringify(publicMethods) + ')');
+                    JSON.stringify(publicMembers) + ')');
             }
+
+            publicMembers[name] = {
+                member: item,
+                publicName: name,
+                privateName: name
+            };
         });
 
         return {
-            publicMethods: publicMethods
+            publicMembers: publicMembers 
         };
     }
 
-    function extractPrivateMethods(descriptor) {
-        const hasPrivateMethods = hasOwnProperty.call(descriptor, 'private');
+    function extractPrivateMembers(descriptor) {
+        const hasPrivateMembers = hasOwnProperty.call(descriptor, 'private');
 
-        const privateMethods = hasPrivateMethods
+        const privateMembers = hasPrivateMembers
             ? descriptor.private
             : {};
 
-        if (typeof privateMethods !== 'object') {
+        if (typeof privateMembers !== 'object') {
             throw new Error('"private" has to be an object.');
         }
 
-        Object_keys(privateMethods).forEach(name => {
-            if (typeof privateMethods[name] !== 'function') {
+        Object_keys(privateMembers).forEach(name => {
+            if (typeof privateMembers[name] !== 'function') {
                 throw new Error('"private" can only contain functions (' +
-                    JSON.stringify(privateMethods) + ')');
+                    JSON.stringify(privateMembers) + ')');
             }
         });
 
         return {
-            privateMethods: privateMethods
+            privateMembers: privateMembers
         };
     }
 
@@ -257,7 +263,11 @@
             .forEach(name => {
                 publicKeyMap[name] = true;
 
-                const member = descriptor.public[name];
+                const { 
+                    member, 
+                    publicName, 
+                    privateName 
+                } = descriptor.public[name];
 
                 const hasRule = hasOwnProperty.call(resolver, name);
                 const rule = resolver[name];
@@ -269,18 +279,39 @@
                     }
 
                     if (rule === null) {
+                        if (publicName === null) {
+                            // The member is already hidden from the
+                            // public api
+                            throw new Error('No public member "' +
+                                name + '" found');
+                        }
+
                         // Hide
+                        result[name] = {
+                            member: member,
+                            publicName: null,
+                            privateName: privateName
+                        };
                         return;
                     }
 
                     if (typeof rule === 'string') {
                         // Rename
-                        result[rule] = member;
+                        result[rule] = {
+                            member: member,
+                            publicName: rule,
+                            privateName: privateName
+                        };
+                        return;
                     }
                 }
                 else {
                     // Copy
-                    result[name] = member;
+                    result[name] = {
+                        member: member,
+                        publicName: publicName,
+                        privateName: privateName
+                    };
                 }
             });
 
@@ -310,7 +341,9 @@
 
     function makeHash(t) {
         const publicMembers = retrieveMetaData(t).public;
-        let hash = Object_keys(publicMembers);
+        let hash = Object_keys(publicMembers)
+            .map(name => publicMembers[name].publicName)
+            .filter(m => m !== null);
         hash.sort();
         return hash.join('#');
     }
@@ -361,27 +394,32 @@
 
             Object_keys(publicMembers)
                 .forEach(name => {
-                    if (hasOwnProperty.call(privateContext, name)) {
+                    const { 
+                        member, 
+                        publicName,
+                        privateName
+                    } = publicMembers[name];
+
+                    if (hasOwnProperty.call(privateContext, privateName)) {
                         throw new Error('Can not overwrite member "' +
                             name + '" which has previously been defined');
                     }
 
-                    const member = publicMembers[name];
                     const memberIsRequired = isRequired(member);
                     const fn = function () {
                         return member.apply(privateContext, arguments);
                     };
 
                     const instanceHasMemberWithSameName = 
-                        hasOwnProperty.call(instance, name);
+                        hasOwnProperty.call(instance, publicName);
 
                     const instanceMemberWithSameNameIsRequired =
                         instanceHasMemberWithSameName &&
-                            isRequired(instance[name]);
+                            isRequired(instance[publicName]);
 
                     const instanceMemberWithSameNameIsImplementation =
                         instanceHasMemberWithSameName &&
-                            !isRequired(instance[name]);
+                            !isRequired(instance[publicName]);
 
                     if (memberIsRequired && 
                         instanceMemberWithSameNameIsRequired) {
@@ -397,15 +435,18 @@
                             !instanceHasMemberWithSameName) {
                         // This declares a new required member and
                         // we still wait for the implementation
-                        instance[name] = member;
+                        instance[publicName] = member;
                     }
                     else if (!memberIsRequired &&
                             (instanceMemberWithSameNameIsRequired ||
                              !instanceHasMemberWithSameName)) {
                         // Overwrite the required statement with the
                         // specified implementation
-                        privateContext[name] = fn;
-                        instance[name] = fn;
+                        privateContext[privateName] = fn;
+
+                        if (publicName !== null) {
+                            instance[publicName] = fn;
+                        }
                     }
                     else {
                         throw new Error('Unknown composition pattern');
@@ -465,16 +506,16 @@
         let { constructor, requires } = extractDependencies(descriptor);
         let { traits } = extractTraits(descriptor);
         let { main } = extractMain(descriptor);
-        let { publicMethods } = extractPublicMethods(descriptor);
-        let { privateMethods } = extractPrivateMethods(descriptor);
+        let { publicMembers } = extractPublicMembers(descriptor);
+        let { privateMembers } = extractPrivateMembers(descriptor);
 
         return makeTrait({
             is: traits,
             requires: requires,
             constructor: constructor,
             main: main,
-            public: publicMethods,
-            private: privateMethods
+            public: publicMembers,
+            private: privateMembers
         });
     }
 

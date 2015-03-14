@@ -169,54 +169,54 @@ broken language by providing their source code and knowledge out in the open for
 to gaze upon:
 
 ### A
-[Angular][http://angularjs.org]
+[Angular]:              http://angularjs.org
 
 ### B
-[babel][https://babeljs.io/]
-[base2][http://dean.edwards.name/weblog/2007/12/base2-intro/]
+[babel]:                https://babeljs.io/]
+[base2]:                http://dean.edwards.name/weblog/2007/12/base2-intro/
 
 ### C
-[Douglas Crockford][http://www.crockford.com]
+[Douglas Crockford]:    http://www.crockford.com
 
 ### D
-[DailyJS][http://www.dailyjs.org]
-[Dean Edwards][http://dean.edwards.name/]
-[dojo][http://dojotoolkit.org]
-[DotNetJunkie][https://cuttingedge.it/blogs/steven/pivot/entry.php?id=92]
+[DailyJS]:              http://www.dailyjs.org
+[Dean Edwards]:         http://dean.edwards.name/
+[dojo]:                 http://dojotoolkit.org
+[DotNetJunkie]:         https://cuttingedge.it/blogs/steven/pivot/entry.php?id=92
 
 ### E
-[ExtJS][http://www.sencha.com/products/extjs/]
+[ExtJS]:                http://www.sencha.com/products/extjs/
 
 ### F
-[FuseJS][https://github.com/paulirish/fusejs]
+[FuseJS]:               https://github.com/paulirish/fusejs
 
 ### H
-[Html5Weekly][html5weekly.com]
+[Html5Weekly]:          html5weekly.com
 
 ### J
-[jasmine][http://jasmine.github.io]
-[JavaScriptWeekly][http://javascriptweekly.com]
-[John Resig][http://ejohn.org]
-[jQuery][http://www.jquery.com]
+[jasmine]:              http://jasmine.github.io
+[JavaScriptWeekly]:     http://javascriptweekly.com
+[John Resig]:           http://ejohn.org
+[jQuery]:               http://www.jquery.com
 
 ### K
-[Knockout][http://www.knockoutjs.com]
+[Knockout]:             http://www.knockoutjs.com
 
 ### R
-[requirejs][http://requirejs.org]
+[requirejs]:            http://requirejs.org
 
 ### S
-[SOLID][http://en.wikipedia.org/wiki/SOLID_%28object-oriented_design%29]
-[StatefulTraits][http://scg.unibe.ch/archive/papers/Berg07aStatefulTraits.pdf]
+[SOLID]:                http://en.wikipedia.org/wiki/SOLID_%28object-oriented_design%29
+[StatefulTraits]:       http://scg.unibe.ch/archive/papers/Berg07aStatefulTraits.pdf
 
 ### T
-[traitsjs][http://soft.vub.ac.be/~tvcutsem/traitsjs/]
+[traitsjs]:             http://soft.vub.ac.be/~tvcutsem/traitsjs/
 
 ### U
-[UMD][https://github.com/umdjs/umd]
+[UMD]:                  https://github.com/umdjs/umd
 
 ### Y
-[YUI3][http://yuilibrary.com]
+[YUI3]:                 http://yuilibrary.com
 
 
 ## Fun With Facts
@@ -255,7 +255,7 @@ nobody cares to support anymore. Just grab the `dist/latest/jeo.js` and have fun
 
 ```javascript
 var jeo = require('path/to/jeo');
-var t = jeo({ ... });
+var t = jeo.trait({ ... });
 ```
 
 * with AMD compatible loaders like requirejs/dojo1.7+ or basically anything that
@@ -263,7 +263,7 @@ var t = jeo({ ... });
 
 ```javascript
 define(['path/to/jeo'], function (jeo) {
-    return jeo({ ... });
+    return jeo.trait({ ... });
 });
 ```
 
@@ -272,7 +272,7 @@ define(['path/to/jeo'], function (jeo) {
 ```html
 <script src="path/to/jeo"></script>
 <script>
-var t = jeo({ ... });
+var t = jeo.trait({ ... });
 </script>
 ```
 
@@ -283,6 +283,7 @@ stage (until say, v0.5.0) please feel free to open an issue for any idea you mig
 on [github](https://github.com/mfeineis/jeo/issues). I'd love to here from you!
 
 ## change Log
+* v0.2.1 Supports resolving public members while retaining the original name in the private execution context
 * v0.2.0 Dependency Injection working
 * v0.1.0 Basic trait handling and instance construction
 

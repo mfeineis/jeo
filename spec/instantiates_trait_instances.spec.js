@@ -318,12 +318,16 @@ describe('A JEO trait', () => {
                 expect(t.first()).toBe(2);
             });
 
-            it('should verify that a configured dependency can be substituted for the original dependency', () => {
+            it('should verify that an invalid configured dependency can not be substituted for the original dependency', () => {
                 expect(() => tx.create({
                     for: [
                         { trait: t1, use: t3 }
                     ]
                 })).toThrow();
+                
+            });
+
+            it('should verify that a configured dependency can be substituted for the original dependency', () => {
                 
                 const t = tx.create({
                     for: [
