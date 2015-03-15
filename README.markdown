@@ -22,7 +22,7 @@
 
 ## Usage
 ```javascript
-let { trait } = reqire('jeo');
+let { trait } = require('jeo');
 
 let engine = trait({
     public: {

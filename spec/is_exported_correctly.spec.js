@@ -17,6 +17,11 @@ describe('The JEO trait and dependency injection library', () => {
             expect(trait.isTrait.length).toBe(1);
         });
 
+        it('should make sure that "isTrait" can not be called with null or undefined', () => {
+            expect(() => trait.isTrait(null)).toThrow();
+            expect(() => trait.isTrait(undefined)).toThrow();
+        });
+
         it('should have a "Util" trait that contains the utility library', () => {
             expect(trait.isTrait(trait.Util)).toBe(true);
         });

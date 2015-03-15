@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>[STUB: Not working yet] Back to the Future - jeo.js</title>
+</head>
+<body>
+    <script src="../dist/latest/jeo-debug.js"></script>
+    <script>
+
+    var trait = jeo.trait;
+
+
+
+    var TAggregate = trait({
+        constructor() {
+            this.changes = [];
+        },
+        public: {
+            onEvent: trait.required,
+            raiseEvent(e) {
+                this.raiseEventInternal(e, 'new');
+            },
+            loadFromHistory(events) {
+                var me = this;
+                events.forEach(function (e) {
+                    me.raiseEventInternal(e, 'from-history');
+                });
+            }
+        },
+        private: {
+            raiseEventInternal(e, eventType) {
+                this.onEvent(e);
+                
+                if (eventType === 'new') {
+                    this.changes.push(e);
+                }
+            }
+        }
+    });
+
+    var TItem = trait({
+        is: TAggregate,
+        constructor() {
+            this.id = 'item-' + (100000000 * Math.random());
+            this.active = false;
+        },
+        public: {
+            activate() {
+                if (this.active) {
+                    throw new Error('Item already active');
+                }
+                this.active = true;
+
+                this.raiseEvent({ name: 'ItemActivated', itemId: this.id });
+            },
+            onEvent(e) {
+                console.log('Item.onEvent(', e, ')');
+            },
+            raiseEvent: trait.required
+        }
+    });
+
+    var item = TItem.create();
+    item.activate();
+
+    </script>
+</body>
+</html>

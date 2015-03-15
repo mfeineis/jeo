@@ -129,7 +129,7 @@ describe('The JEO trait and dependency injection library export', () => {
 
     });
 
-    describe('when called with a descriptor that contains a property named "traits"', () => {
+    describe('when called with a descriptor that contains a property named "is"', () => {
         const validDependency = trait({});
 
         it('should verify that the provided objects are in fact traits', () => {
@@ -140,6 +140,9 @@ describe('The JEO trait and dependency injection library export', () => {
 
             expect(() => trait({ is: validDependency })).not.toThrow();
             expect(() => trait({ is: [validDependency, validDependency] })).not.toThrow();
+
+            expect(() => trait({ is: [null, validDependency] })).toThrow();
+            expect(() => trait({ is: [undefined, validDependency] })).toThrow();
         });
         
         it('should allow an empty array', () => {

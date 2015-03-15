@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>[STUB: Not working yet] Back to the Future - jeo.js</title>
+</head>
+<body>
+    <script src="../dist/latest/jeo-debug.js"></script>
+    <script>
+
+(function (trait) {
+    'use strict';
+
+var engine = trait({
+    public: {
+        start() { },
+        stop() { }
+    }
+});
+
+var chassis = trait({
+    public: {
+        steerLeft() { },
+        steerLight() { }
+    }
+});
+
+var vehicle = trait({
+    is: [chassis, engine.resolve({ 
+        start: 'startEngine', 
+        stop: 'stopEngine' 
+    })],
+    public: {
+        accelerate: trait.required,
+        startEngine: trait.required,
+        stopEngine: trait.required
+    }
+});
+
+var car = trait({
+    is: [vehicle],
+    public: {
+        accelerate(milesPerHour) { }
+    }
+});
+
+var fluxCapacitor = trait({
+    public: {
+        engage() { }
+    }
+});
+
+var nuclearPowerSource = trait({
+    public: {
+        charge(watts) { }
+    }
+});
+
+var timeMachine = trait({
+    is: [nuclearPowerSource, fluxCapacitor.resolve({
+        engage: 'engageFluxCapacitor' 
+    })],
+    public: {
+        engage() { },
+        setDestination() { }
+    }
+});
+
+var hoverPadChassis = trait({
+    public: {
+        steerDown() { },
+        steerLeft() { },
+        steerRight() { },
+        steerUp() { }
+    }
+});
+
+var mrFusion = trait({
+    public: {
+        charge(watts) { }
+    }
+});
+
+var delorean = trait(car, timeMachine.resolve({ engage: 'engageTimeMachine' }));
+
+var flyingDeloreanFromTheFuture = delorean.create({
+    for: [
+        { trait: nuclearPowerSource, use: mrFusion },
+        { trait: chassis, use: hoverPadChassis }
+    ]
+});
+
+console.log(flyingDeloreanFromTheFuture);
+console.log(flyingDeloreanFromTheFuture.startEngine());
+console.log(flyingDeloreanFromTheFuture.setDestination());
+console.log(flyingDeloreanFromTheFuture.charge(1.21e9));
+console.log(flyingDeloreanFromTheFuture.accelerate(88));
+console.log(flyingDeloreanFromTheFuture.engageFluxCapacitor());
+console.log(flyingDeloreanFromTheFuture.engageTimeMachine());
+
+
+}(jeo.trait));
+
+    </script>
+</body>
+</html>

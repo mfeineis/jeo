@@ -246,6 +246,10 @@
     }
 
     function isTrait(object) {
+        if (!object) {
+            throw new Error('Argument to "isTrait" can not be null ' +
+                'or undefined.');
+        }
         if (typeof object[expando] === 'function') {
             return !!retrieveMetaData(object);
         }
@@ -349,6 +353,10 @@
     }
 
     function closeOverInstance(instance, config) {
+        // DEBUG
+        instance.contexts = [];
+        // DEBUG-END
+        
         return function applyStatefulTrait(t) {
             let [substitute] = config.for.filter(tt => tt.trait === t);
             if (substitute) {
@@ -356,7 +364,7 @@
                 let hashOfT = makeHash(t);
 
                 if (hashOfT !== substituteHash) {
-                    throw new Error('Substiute hash "' + substituteHash + 
+                    throw new Error('Substitute hash "' + substituteHash + 
                         '" does not match the hash "' + hashOfT + '" of ' +
                         'the trait to be substituted');
                 }
@@ -370,6 +378,10 @@
                 .map(dep => createInstance(dep, config));
 
             const privateContext = {};
+
+            // DEBUG
+            instance.contexts.push(privateContext);
+            // DEBUG-END
             
             descriptor.constructor.apply(privateContext, dependencies);
 
@@ -590,3 +602,4 @@
 
 
 
+/* -===========================- 80 chars width -=========================- */
