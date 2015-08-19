@@ -1,5 +1,5 @@
 # jeo
-
+THIS IS ONLY A PLAYGROUND PET PROJECT - NO ROADMAP AS OF YET
 
 ## Puns
 * Traits with a shot
